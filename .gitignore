@@ -2,5 +2,9 @@ venv/
 __pycache__/
 *.pyc
 .env
-data/*.csv
 .DS_Store
+
+# Data files (anywhere in the repo)
+*.RData
+*.csv
+*.zip

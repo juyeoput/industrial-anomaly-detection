@@ -1,11 +1,14 @@
+import os
 import pyreadr
 import pandas as pd
 import matplotlib.pyplot as plt
 
-normal = pd.read_csv('/Users/yoonseouimacbookair/industrial-anomaly-detection/TEP_Faulty_Testing.csv')
+DATA_DIR = os.path.expanduser('~/Downloads')
+
+normal = pd.read_csv(os.path.join(DATA_DIR, 'TEP_FaultFree_Testing.csv'))
 normal = normal[normal['faultNumber'] == 0]
 
-result = pyreadr.read_r('/Users/yoonseouimacbookair/industrial-anomaly-detection/TEP_Faulty_Testing.RData')
+result = pyreadr.read_r(os.path.join(DATA_DIR, 'TEP_Faulty_Testing.RData'))
 faulty = result['faulty_testing']
 
 fault14 = faulty[faulty['faultNumber'] == 14]

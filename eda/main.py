@@ -1,6 +1,8 @@
+import os
 import pandas as pd
 
-df = pd.read_csv('/Users/yoonseouimacbookair/industrial-anomaly-detection/TEP_FaultFree_Testing.RData')
+DATA_DIR = os.path.expanduser('~/Downloads')
+df = pd.read_csv(os.path.join(DATA_DIR, 'TEP_FaultFree_Testing.csv'))
 normal = df[df['faultNumber'] == 0]
 
 variables = {
