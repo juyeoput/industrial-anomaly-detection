@@ -1,6 +1,6 @@
 # TEP Fault Scenario Document — Selected Faults v3
 ## Prepared by: Yoonseo (Chemical Engineering, University at Buffalo)
-## For: Junyeop (ML Model Development)
+## For: Juyeop (ML Model Development)
 
 **Scope note**: This document covers 10 of the 20 TEP faults, based on EDA
 conducted on simulationRun 1 only. Numerical ranges reflect observations from
