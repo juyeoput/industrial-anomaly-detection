@@ -13,8 +13,8 @@ actions — combining domain knowledge with AI.
 ## Team
 
 - **Yoonseo** (Chemical Engineering, University at Buffalo) — Process domain analysis, EDA, fault scenario design
-- **Junyeop** (Computer Science) — ML model development, LLM integration, backend and deployment
-- **Hyunbeom** (Industrial Engineering) — Bottleneck analysis, KPI, operational optimization
+- **Juyeop** (Computer Science) — ML model development, LLM integration, backend and deployment
+- **Hyeonbeom** (Industrial Engineering) — Bottleneck analysis, KPI, operational optimization
 
 ## Dataset
 
