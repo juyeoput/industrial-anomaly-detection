@@ -4,8 +4,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from config import FAULT_CONFIGS
 
-DATA_DIR = os.path.expanduser('~/Downloads')
-IMG_DIR = os.path.join(os.path.dirname(__file__), 'images')
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))    # .../industrial-anomaly-detection/eda
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)                  # .../industrial-anomaly-detection
+DATA_DIR = os.path.join(PROJECT_ROOT, 'data')                # .../industrial-anomaly-detection/data
+IMG_DIR = os.path.join(SCRIPT_DIR, 'images')
 os.makedirs(IMG_DIR, exist_ok=True)
 
 
