@@ -8,3 +8,6 @@ __pycache__/
 *.RData
 *.csv
 *.zip
+
+# Exception: keep this summary file (it's a small derived result, not raw data)
+!eda/fault_sensor_summary.csv
