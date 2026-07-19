@@ -9,5 +9,6 @@ __pycache__/
 *.csv
 *.zip
 
-# Exception: keep this summary file (it's a small derived result, not raw data)
+# Exception: keep summary files (small derived results, not raw data)
 !eda/fault_sensor_summary.csv
+!eda/fault_multi_run_summary.csv
