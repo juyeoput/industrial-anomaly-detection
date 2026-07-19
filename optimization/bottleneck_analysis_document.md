@@ -102,9 +102,3 @@ and the operation strategy says *what to do* about it.
 
 ---
 
-## 6. Next Work (TODO)
-
-- [ ] Verify bottleneck mapping with actual level sensors (xmeas_8/12/15) on fault data
-- [ ] Quantify queue buildup: how fast does the constrained unit's level/pressure rise after fault onset
-- [ ] Estimate throughput loss per fault (ties into OEE Performance term)
-- [ ] Cross-check with Throughput KPI once TEP data is available
