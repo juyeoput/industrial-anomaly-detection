@@ -1,18 +1,22 @@
+# Python
 venv/
-__pycache__/
+**/__pycache__/
 *.pyc
 .env
+
+# macOS
 .DS_Store
 
-# Data files (anywhere in the repo)
+# Raw data
 *.RData
 *.csv
 *.zip
 
-# Exception: keep summary files (small derived results, not raw data)
-!eda/fault_sensor_summary.csv
-!eda/fault_multi_run_summary.csv
-!eda/fault_ttest_summary.csv
-!eda/fault2_composition_summary.csv
+# Active EDA result CSV files
 !eda/fault2_composition_multi_run_summary.csv
 !eda/fault_run_level_validation.csv
+
+# Archived exploratory result CSV files
+!eda/archive/exploratory/fault_sensor_summary.csv
+!eda/archive/exploratory/fault_multi_run_summary.csv
+!eda/archive/exploratory/fault_ttest_summary.csv
