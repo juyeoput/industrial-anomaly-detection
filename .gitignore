@@ -14,3 +14,4 @@ __pycache__/
 !eda/fault_multi_run_summary.csv
 !eda/fault_ttest_summary.csv
 !eda/fault2_composition_summary.csv
+!eda/fault2_composition_multi_run_summary.csv
