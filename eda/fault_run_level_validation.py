@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 from config import FAULT_CONFIGS
 from plot_fault import load_data
@@ -10,19 +11,8 @@ from plot_fault import load_data
 print("Loading data...")
 normal, faulty = load_data()
 
-# Keep the original 10-run descriptive validation set.
-SAMPLE_RUNS = [
-    1,
-    25,
-    50,
-    100,
-    150,
-    200,
-    250,
-    300,
-    400,
-    500,
-]
+# 50 independent simulation runs sampled across runs 1-500
+SAMPLE_RUNS = list(range(1, 501, 10))
 
 WINDOWS = {
     "early": (160, 260),
@@ -30,7 +20,56 @@ WINDOWS = {
     "full": (160, 960),
 }
 
+MIN_STD_RATIO = 1e-12
 
+
+def safe_ttest_1samp(values):
+    """Run a one-sample t-test while handling constant arrays."""
+    values = np.asarray(values, dtype=float)
+    values = values[np.isfinite(values)]
+
+    if len(values) < 2:
+        return np.nan
+
+    if np.allclose(values, 0):
+        return 1.0
+
+    # A constant non-zero effect is perfectly consistent across runs.
+    if np.isclose(values.std(ddof=1), 0):
+        return 0.0
+
+    result = stats.ttest_1samp(
+        values,
+        popmean=0,
+        nan_policy="omit",
+    )
+
+    return float(result.pvalue)
+
+
+def safe_wilcoxon(values):
+    """Run a Wilcoxon signed-rank test while handling zero arrays."""
+    values = np.asarray(values, dtype=float)
+    values = values[np.isfinite(values)]
+
+    if len(values) < 2:
+        return np.nan
+
+    if np.allclose(values, 0):
+        return 1.0
+
+    try:
+        result = stats.wilcoxon(
+            values,
+            zero_method="wilcox",
+            alternative="two-sided",
+        )
+        return float(result.pvalue)
+    except ValueError:
+        return np.nan
+
+
+# Normal data can be indexed once and reused for every fault.
 normal_by_run = {
     run: normal[normal["simulationRun"] == run]
     for run in SAMPLE_RUNS
@@ -63,7 +102,6 @@ for fault_number, config in FAULT_CONFIGS.items():
                 if run_normal.empty or run_fault.empty:
                     continue
 
-                # Normal and faulty data use the same sample window.
                 normal_window = run_normal[
                     run_normal["sample"].between(start, end)
                 ][sensor].dropna()
@@ -81,14 +119,16 @@ for fault_number, config in FAULT_CONFIGS.items():
                 fault_mean = fault_window.mean()
                 fault_std = fault_window.std()
 
+                # A valid normal standard deviation is required for
+                # normalized effects and standard-deviation ratios.
                 if (
                     not np.isfinite(normal_std)
                     or normal_std <= 0
                 ):
                     continue
 
-                # A zero fault standard deviation is valid and may
-                # indicate a constant or saturated post-fault state.
+                # A zero fault standard deviation is valid. It may
+                # indicate saturation or a constant post-fault state.
                 if not np.isfinite(fault_std):
                     continue
 
@@ -105,14 +145,30 @@ for fault_number, config in FAULT_CONFIGS.items():
                 else:
                     pct_change = np.nan
 
-                std_ratio = (
-                    fault_std / normal_std
+                normalized_mean_difference = (
+                    mean_difference / normal_std
+                )
+
+                std_ratio = fault_std / normal_std
+
+                # log(0) is undefined, so zero ratios are clipped only
+                # for the variance statistical test.
+                safe_std_ratio = max(
+                    std_ratio,
+                    MIN_STD_RATIO,
+                )
+                log_std_ratio = np.log(
+                    safe_std_ratio
                 )
 
                 run_metrics.append({
                     "run": run,
+                    "mean_difference": mean_difference,
                     "pct_change": pct_change,
+                    "normalized_mean_difference":
+                        normalized_mean_difference,
                     "std_ratio": std_ratio,
+                    "log_std_ratio": log_std_ratio,
                 })
 
             if not run_metrics:
@@ -120,12 +176,34 @@ for fault_number, config in FAULT_CONFIGS.items():
 
             metrics_df = pd.DataFrame(run_metrics)
 
+            mean_differences = metrics_df[
+                "mean_difference"
+            ].to_numpy()
+
+            log_std_ratios = metrics_df[
+                "log_std_ratio"
+            ].to_numpy()
+
+            mean_t_pvalue = safe_ttest_1samp(
+                mean_differences
+            )
+            mean_wilcoxon_pvalue = safe_wilcoxon(
+                mean_differences
+            )
+
+            variance_t_pvalue = safe_ttest_1samp(
+                log_std_ratios
+            )
+            variance_wilcoxon_pvalue = safe_wilcoxon(
+                log_std_ratios
+            )
+
             positive_rate = (
-                metrics_df["pct_change"] > 0
+                metrics_df["mean_difference"] > 0
             ).mean()
 
             negative_rate = (
-                metrics_df["pct_change"] < 0
+                metrics_df["mean_difference"] < 0
             ).mean()
 
             mean_direction_consistency = max(
@@ -144,6 +222,10 @@ for fault_number, config in FAULT_CONFIGS.items():
                 metrics_df["std_ratio"] > 1
             ).mean()
 
+            variance_decrease_rate = (
+                metrics_df["std_ratio"] < 1
+            ).mean()
+
             summary_rows.append({
                 "fault": fault_number,
                 "sensor": sensor,
@@ -151,11 +233,11 @@ for fault_number, config in FAULT_CONFIGS.items():
                 "sample_range": f"{start}-{end}",
                 "n_runs": len(metrics_df),
 
-                "pct_change_mean_avg": round(
+                "pct_change_avg": round(
                     metrics_df["pct_change"].mean(),
                     4,
                 ),
-                "pct_change_mean_std": round(
+                "pct_change_std": round(
                     metrics_df["pct_change"].std(),
                     4,
                 ),
@@ -166,11 +248,24 @@ for fault_number, config in FAULT_CONFIGS.items():
                     4,
                 ),
 
+                "normalized_mean_effect_avg": round(
+                    metrics_df[
+                        "normalized_mean_difference"
+                    ].mean(),
+                    4,
+                ),
+
                 "mean_direction": mean_direction,
                 "mean_direction_consistency": round(
                     mean_direction_consistency,
                     4,
                 ),
+
+                # Store raw p-values so very small values are not
+                # incorrectly displayed as exactly 0.0.
+                "mean_t_pvalue": mean_t_pvalue,
+                "mean_wilcoxon_pvalue":
+                    mean_wilcoxon_pvalue,
 
                 "std_ratio_avg": round(
                     metrics_df["std_ratio"].mean(),
@@ -184,6 +279,15 @@ for fault_number, config in FAULT_CONFIGS.items():
                     variance_increase_rate,
                     4,
                 ),
+                "variance_decrease_rate": round(
+                    variance_decrease_rate,
+                    4,
+                ),
+
+                "variance_t_pvalue":
+                    variance_t_pvalue,
+                "variance_wilcoxon_pvalue":
+                    variance_wilcoxon_pvalue,
             })
 
 
@@ -214,7 +318,7 @@ summary_df = (
 
 output_path = os.path.join(
     os.path.dirname(__file__),
-    "fault_multi_run_summary.csv",
+    "fault_run_level_validation.csv",
 )
 
 summary_df.to_csv(
@@ -222,7 +326,7 @@ summary_df.to_csv(
     index=False,
 )
 
-print("\n=== Multi-Run Descriptive Summary ===")
+print("\n=== Run-Level Validation Summary ===")
 print(summary_df.to_string(index=False))
 print(f"\nRows generated: {len(summary_df)}")
 print(f"Saved: {output_path}")
