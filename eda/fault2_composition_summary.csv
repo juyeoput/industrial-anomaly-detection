@@ -1,0 +1,5 @@
+fault,sensor,sensor_name,normal_mean,normal_std,fault_mean,fault_std,pct_change_mean,std_ratio
+2,xmeas_24,Reactor Feed B Composition (mol%),8.8965,0.1097,9.0397,0.2651,1.61,2.42
+2,xmeas_30,Purge B Composition (mol%),13.8233,0.1121,13.9722,0.4116,1.08,3.67
+2,xmeas_35,Purge G Composition (mol%),4.8583,0.0656,5.0595,0.1405,4.14,2.14
+2,xmeas_40,Product G Composition (mol%),53.7567,0.4762,53.784,0.4902,0.05,1.03
