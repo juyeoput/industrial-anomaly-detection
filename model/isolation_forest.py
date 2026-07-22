@@ -95,6 +95,24 @@ def evaluate_by_fault(model, threshold, faulty_testing_df, sample_cutoff=160, la
         recall = caught / total
         print(f"{fault_num:<8}{recall:<10.4f}{caught:<12}{total - caught}")
 
+# need to check if the current threshold is appropriate
+def inspect_score_distribution(model, threshold, faulty_testing_df, fault_numbers, sample_cutoff=160):
+    df = faulty_testing_df.copy()
+    df['true_label'] = (df['sample'] >= sample_cutoff).astype(int)
+    X = df[SENSOR_COLS]
+    df['score'] = model.score_samples(X)
+
+    normal_scores = df[df['true_label'] == 0]['score']
+    print(f"Normal scores      -> mean: {normal_scores.mean():.4f}, median: {normal_scores.median():.4f}")
+    print(f"Current threshold  -> {threshold:.4f}")
+    print()
+
+    for fault_num in fault_numbers:
+        fault_scores = df[(df['faultNumber'] == fault_num) & (df['true_label'] == 1)]['score']
+        pct_below = (fault_scores < threshold).mean()
+        print(f"Fault {fault_num}: mean={fault_scores.mean():.4f}, median={fault_scores.median():.4f}, "
+              f"% caught at current threshold={pct_below:.4f}")
+
 if __name__ == "__main__":
     print("1. Load & split (FaultFree Training)")
     train_df, val_df = load_and_split('TEP_FaultFree_Training.csv')
@@ -118,3 +136,7 @@ if __name__ == "__main__":
 
     print("\n7. Recall by fault number (late window only)")
     evaluate_by_fault(model, threshold, faulty_testing_df, late_start=300)
+
+    # the lowest recalls(4,11,14) VS the highest recalls(1,8)
+    print("\n8. Score distribution check (threshold sensitivity)")
+    inspect_score_distribution(model, threshold, faulty_testing_df, fault_numbers=[4, 11, 14, 1, 8])
