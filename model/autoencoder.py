@@ -122,14 +122,13 @@ def compute_reconstruction_error(model, scaler, df):
 
 
 def set_threshold(model, scaler, faultfree_testing_df, target_fpr=0.05):
-    normal_df = faultfree_testing_df[faultfree_testing_df["faultNumber"] == 0]
+    normal_df = faultfree_testing_df[faultfree_testing_df["faultNumber"] == 0] # only normal one
     errors = compute_reconstruction_error(model, scaler, normal_df)
 
     threshold = np.percentile(errors, (1 - target_fpr) * 100)
 
     predicted_anomaly = errors > threshold
     actual_fpr = predicted_anomaly.mean()
-    print(f"Target FPR: {target_fpr}, Actual FPR: {actual_fpr:.4f}")
     print(
         f"Target FPR: {target_fpr}, Actual FPR: {actual_fpr:.4f}, Threshold: {threshold:.6f}"
     )  # Threshold
