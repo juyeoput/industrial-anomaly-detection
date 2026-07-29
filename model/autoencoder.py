@@ -107,8 +107,15 @@ def compute_reconstruction_error(model, scaler, df):
     X = scaler.transform(
         df[SENSOR_COLS]
     )  # numpy.ndarray, shape (n_rows, 52), dtype float64
+
+    # figure out which device this model's parameters actually live on
+    try:
+        model_device = next(model.parameters()).device
+    except StopIteration:
+        model_device = torch.device("cpu")
+
     X_tensor = torch.tensor(X, dtype=torch.float32).to(
-        DEVICE
+        model_device
     )  # torch.Tensor, shape (n_rows, 52), dtype float32
 
     model.eval()
