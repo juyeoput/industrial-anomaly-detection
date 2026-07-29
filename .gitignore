@@ -23,3 +23,6 @@ venv/
 !eda/archive/exploratory/fault_sensor_summary.csv
 !eda/archive/exploratory/fault_multi_run_summary.csv
 !eda/archive/exploratory/fault_ttest_summary.csv
+
+*.pth
+*.pkl
