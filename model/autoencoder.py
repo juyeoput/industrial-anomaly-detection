@@ -130,6 +130,12 @@ def set_threshold(model, scaler, faultfree_testing_df, target_fpr=0.05):
     predicted_anomaly = errors > threshold
     actual_fpr = predicted_anomaly.mean()
     print(f"Target FPR: {target_fpr}, Actual FPR: {actual_fpr:.4f}")
+    print(
+        f"Target FPR: {target_fpr}, Actual FPR: {actual_fpr:.4f}, Threshold: {threshold:.6f}"
+    )  # Threshold
+    print(
+        f"  Normal errors -> mean: {errors.mean():.6f}, std: {errors.std():.6f}"
+    )  # distribution
     return threshold
 
 
@@ -138,6 +144,12 @@ def evaluate_on_faulty(model, scaler, threshold, faulty_testing_df, sample_cutof
     df["true_label"] = (df["sample"] >= sample_cutoff).astype(int)
 
     errors = compute_reconstruction_error(model, scaler, df)
+
+    fault_errors = errors[df["true_label"] == 1]
+    print(
+        f"  Fault errors -> mean: {fault_errors.mean():.6f}, std: {fault_errors.std():.6f}"
+    )
+
     df["predicted_label"] = (errors > threshold).astype(int)
 
     precision = precision_score(df["true_label"], df["predicted_label"])
