@@ -16,7 +16,6 @@ from autoencoder import (
     compute_reconstruction_error,
     set_threshold,
     evaluate_on_faulty,
-    evaluate_by_fault,
 )
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
